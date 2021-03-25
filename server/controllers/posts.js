@@ -1,7 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 import PostMessage from '../models/postMessage.js';
+import User from '../models/user.js'
+
 
 const router = express.Router();
 
@@ -75,4 +78,50 @@ export const likePost = async (req, res) => {
     const updatedPost = await PostMessage.findByIdAndUpdate(id, { likeCount: post.likeCount + 1 }, { new: true });
     
     res.json(updatedPost);
+}
+export const registerPost = async (req, res) => {
+    
+   
+
+    User.findOne({ username: req.body.username},async (err, doc) => {
+        if (err) throw err;
+        if (doc) res.send("User Already Exists");
+        if (!doc) {
+            
+            const newUser = new User({ 
+                username: req.body.username,
+                password: req.body.password,
+            });
+
+            bcrypt.genSalt(9, (err, salt) => { 
+                bcrypt.hash(newUser.password, salt, (err, hash) => {
+                if(err) throw err;
+                //set password to hash
+                newUser.password = hash;
+                //save user
+                newUser.save()
+                    .then(user => {
+                    //res.redirect('login')
+                    console.log(newUser);
+                    })
+                    .catch(err => console.log(err))
+                })
+            })
+        }
+
+
+    })
+
+
+
+    // try {
+    //     await newUser.save();
+    //     console.log(newUser);
+
+    //     res.status(201).json(newUser);
+    // } catch (error) {
+    //     res.status(409).json({ message: error.message });
+    // }
+
+
 }
